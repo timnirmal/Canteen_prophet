@@ -3,6 +3,7 @@ from matplotlib import pyplot
 from prophet import Prophet
 from lib.datetimegen import generate_datetimes as dgt
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+from prophet.serialize import model_to_json, model_from_json
 
 # load the data/transposed first column
 df = pd.read_csv("data/df3.csv")
@@ -30,12 +31,13 @@ holidays = playoffs
 
 # add holidays
 model = Prophet(
-    holidays=holidays, changepoint_prior_scale=1, changepoint_range=1,
+    holidays=holidays,
+    # changepoint_prior_scale=1, changepoint_range=1,
     yearly_seasonality=True, weekly_seasonality=True,
     daily_seasonality=True,
     seasonality_mode='multiplicative',
     # seasonality_prior_scale=500.0, holidays_prior_scale=500.0, mcmc_samples=0, interval_width=1,
-    # uncertainty_samples=1000, stan_backend=None,
+    uncertainty_samples=10000, stan_backend=None,
     # growth='logistic'
 )
 
@@ -99,3 +101,10 @@ from prophet.plot import add_changepoints_to_plot
 fig = model.plot(forecast)
 a = add_changepoints_to_plot(fig.gca(), model, forecast)
 pyplot.show()
+
+
+# with open('serialized_model.json', 'w') as fout:
+#     fout.write(model_to_json(m))  # Save model
+#
+# with open('serialized_model.json', 'r') as fin:
+#     m = model_from_json(fin.read())  # Load model
