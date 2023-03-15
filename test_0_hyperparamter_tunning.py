@@ -112,11 +112,29 @@ rmses = []  # Store the RMSEs for each params here
 # Use cross validation to evaluate all parameters
 for params in all_params:
     """LOG"""
+    # variable for iteration number
+    iteration = str(all_params.index(params))
+    # iteration folder path
+    iteration_path = "results/" + folder_name + "/" + iteration
+    # inside results/now date(YYYYMMDD)-time(HHMMSS)-iteration folder create folder named iteration number
+    if os.path != iteration_path:
+        os.makedirs(iteration_path)
+
+    # create results + iteration folder path + .txt file
+    results_file_itr = open(iteration_path + "/results.txt", "w+")
+
+
     # write iteration number, datetime of run to folder_name/results.txt
     with open("results/" + folder_name + "/results.txt", "a") as myfile:
         myfile.write("\n\n============================================================\n")
         myfile.write("Iteration : " + str(all_params.index(params)) + "\n")
         myfile.write("Datetime : " + str(pd.to_datetime('today').strftime("%Y%m%d-%H%M%S")) + "\n\n")
+    # write params to iteration_path/results.txt
+    with open(iteration_path + "/results.txt", "a") as myfile:
+        myfile.write("\n\n============================================================\n")
+        myfile.write("Iteration : " + str(all_params.index(params)) + "\n")
+        myfile.write("Datetime : " + str(pd.to_datetime('today').strftime("%Y%m%d-%H%M%S")) + "\n\n")
+
     # print params
     print("Params: ", params)
     # for each item in params json, write it to the file
@@ -125,6 +143,12 @@ for params in all_params:
         for key, value in params.items():
             results_file.write("%s: %s\n" % (key, value))
         results_file.write("\n\n")
+    with open(iteration_path + "/results.txt", "a") as results_file:
+        results_file.write("Params: \n")
+        for key, value in params.items():
+            results_file.write("%s: %s\n" % (key, value))
+        results_file.write("\n\n")
+
 
     print("\nIterration : ", (all_params.index(params)))
     print("Model Training...\n")
@@ -138,16 +162,16 @@ for params in all_params:
 
     """LOG"""
     # save df_cv to results folder with iteration number
-    df_cv.to_csv("results/" + folder_name + "/df_cv-" + str(all_params.index(params)) + ".csv", index=False)
+    df_cv.to_csv(iteration_path + "/df_cv-" + iteration + ".csv", index=False)
     # save df_p to results folder
-    df_p.to_csv("results/" + folder_name + "/df_p.csv", index=False)
+    df_p.to_csv(iteration_path + "/df_p-" + iteration + ".csv", index=False)
 
     future = m.make_future_dataframe(periods=200, freq='D')
-    future.to_csv("results/" + folder_name + "/future.csv", index=False)
+    future.to_csv(iteration_path + "/future-" + iteration + ".csv", index=False)
 
     # use the model to make a forecast
     forecast = m.predict(future)
-    forecast.to_csv("results/" + folder_name + "/forecast.csv", index=False)
+    forecast.to_csv(iteration_path + "/forecast-" + iteration + ".csv", index=False)
 
     r2_score(df["y"], forecast["yhat"][:len(df["y"])])
     mean_squared_error(df["y"], forecast["yhat"][:len(df["y"])])
@@ -163,10 +187,21 @@ for params in all_params:
         myfile.write("\n\nMetrics\n")
         myfile.write("R2: ")
         myfile.write(str(r2_score(df["y"], forecast["yhat"][:len(df["y"])])))
-        myfile.write("MSE: ")
+        myfile.write("\nMSE: ")
         myfile.write(str(mean_squared_error(df["y"], forecast["yhat"][:len(df["y"])])))
-        myfile.write("MAE: ")
+        myfile.write("\nMAE: ")
         myfile.write(str(mean_absolute_error(df["y"], forecast["yhat"][:len(df["y"])])))
+        myfile.write("\n\n")
+    with open(iteration_path + "/results.txt", "a") as myfile:
+        myfile.write("\n\nMetrics\n")
+        myfile.write("R2: ")
+        myfile.write(str(r2_score(df["y"], forecast["yhat"][:len(df["y"])])))
+        myfile.write("\nMSE: ")
+        myfile.write(str(mean_squared_error(df["y"], forecast["yhat"][:len(df["y"])])))
+        myfile.write("\nMAE: ")
+        myfile.write(str(mean_absolute_error(df["y"], forecast["yhat"][:len(df["y"])])))
+        myfile.write("\n\n")
+
 
 
     with open('serialized_model' + str(all_params.index(params)) + '.json', 'w') as fout:
@@ -175,18 +210,18 @@ for params in all_params:
     # plot forecast
     m.plot(forecast)
     # save plot to image
-    pyplot.savefig("results/" + folder_name + "/forecast-" + str(all_params.index(params)) + ".png")
+    pyplot.savefig(iteration_path + "/forecast-" + iteration + ".png")
 
     # plot forecast components
     m.plot_components(forecast)
     # save plot to image
-    pyplot.savefig("results/" + folder_name + "/forecast_components-" + str(all_params.index(params)) + ".png")
+    pyplot.savefig(iteration_path + "/forecast_components-" + iteration + ".png")
 
     # plot changepoints
     fig = m.plot(forecast)
     a = add_changepoints_to_plot(fig.gca(), m, forecast)
     # save plot to image
-    pyplot.savefig("results/" + folder_name + "/changepoints-" + str(all_params.index(params)) + ".png")
+    pyplot.savefig(iteration_path + "/changepoints-" + iteration + ".png")
 
 # Find the best parameters
 tuning_results = pd.DataFrame(all_params)
