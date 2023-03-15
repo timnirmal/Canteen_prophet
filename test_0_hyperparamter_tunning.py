@@ -7,6 +7,10 @@ from prophet.serialize import model_to_json, model_from_json
 from prophet.diagnostics import cross_validation, performance_metrics
 import itertools
 import numpy as np
+from dask.distributed import Client
+
+# client = Client(n_workers=4, threads_per_worker=1, memory_limit='2GB')
+client = Client()
 
 # load every column in pd head
 pd.set_option('display.max_columns', None)
@@ -35,17 +39,17 @@ playoffs = pd.DataFrame({
 
 holidays = playoffs
 
-# add holidays
-model = Prophet(
-    holidays=holidays,
-    changepoint_prior_scale=1, changepoint_range=1,
-    yearly_seasonality=True, weekly_seasonality=True,
-    daily_seasonality=True,
-    seasonality_mode='multiplicative',
-    seasonality_prior_scale=500.0, holidays_prior_scale=500.0, mcmc_samples=0, interval_width=1,
-    uncertainty_samples=2000, stan_backend=None,
-    # growth='logistic'
-)
+# # add holidays
+# model = Prophet(
+#     holidays=holidays,
+#     changepoint_prior_scale=1, changepoint_range=1,
+#     yearly_seasonality=True, weekly_seasonality=True,
+#     daily_seasonality=True,
+#     seasonality_mode='multiplicative',
+#     seasonality_prior_scale=500.0, holidays_prior_scale=500.0, mcmc_samples=0, interval_width=1,
+#     uncertainty_samples=2000, stan_backend=None,
+#     # growth='logistic'
+# )
 
 # add regressors
 # model.add_regressor("y")
@@ -59,11 +63,22 @@ model = Prophet(
 # MSE:  2330.9295002085705
 # MAE:  18.468722578249313
 
-cutoffs = pd.to_datetime(['2020-06-01','2021-06-01','2022-06-01'])
+cutoffs = pd.to_datetime(['2020-06-01', '2021-06-01', '2022-06-01'])
 
 param_grid = {
     'changepoint_prior_scale': [0.001, 0.01, 0.1, 0.5, 1],
     'seasonality_prior_scale': [0.01, 0.1, 1],
+    'holidays': [holidays],
+    'seasonality_mode': ['multiplicative'],
+    'holidays_prior_scale': [10],
+    'mcmc_samples': [0],
+    'interval_width': [1],
+    'uncertainty_samples': [2000],
+    'stan_backend': [None],
+    'changepoint_range': [1],
+    'yearly_seasonality': [True],
+    'weekly_seasonality': [True],
+    'daily_seasonality': [True],
 }
 
 # Generate all combinations of parameters
@@ -74,7 +89,7 @@ rmses = []  # Store the RMSEs for each params here
 for params in all_params:
     m = Prophet(**params).fit(df)  # Fit model with given params
     # df_cv = cross_validation(model, initial='730 days', period='180 days', horizon='365 days')
-    df_cv = cross_validation(m, cutoffs=cutoffs, horizon='30 days')
+    df_cv = cross_validation(m, cutoffs=cutoffs, horizon='30 days', parallel="dask")
     df_p = performance_metrics(df_cv)
     rmses.append(df_p['rmse'].values[0])
 
@@ -85,12 +100,6 @@ print(tuning_results)
 
 best_params = all_params[np.argmin(rmses)]
 print('Best params: ', best_params)
-
-
-
-
-
-
 
 #
 # # fit the model
@@ -154,3 +163,8 @@ print('Best params: ', best_params)
 #
 # with open('serialized_model.json', 'r') as fin:
 #     m = model_from_json(fin.read())  # Load model
+
+
+# Run to install Dask conda or pip
+# conda install dask distributed
+# python -m pip install "dask[distributed]" --upgrade
