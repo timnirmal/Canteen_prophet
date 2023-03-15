@@ -4,6 +4,10 @@ from prophet import Prophet
 from lib.datetimegen import generate_datetimes as dgt
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from prophet.serialize import model_to_json, model_from_json
+from prophet.diagnostics import cross_validation, performance_metrics
+
+# load every column in pd head
+pd.set_option('display.max_columns', None)
 
 # load the data/transposed first column
 df = pd.read_csv("data/df3.csv")
@@ -32,12 +36,12 @@ holidays = playoffs
 # add holidays
 model = Prophet(
     holidays=holidays,
-    # changepoint_prior_scale=1, changepoint_range=1,
+    changepoint_prior_scale=1, changepoint_range=1,
     yearly_seasonality=True, weekly_seasonality=True,
     daily_seasonality=True,
     seasonality_mode='multiplicative',
-    # seasonality_prior_scale=500.0, holidays_prior_scale=500.0, mcmc_samples=0, interval_width=1,
-    uncertainty_samples=10000, stan_backend=None,
+    seasonality_prior_scale=500.0, holidays_prior_scale=500.0, mcmc_samples=0, interval_width=1,
+    uncertainty_samples=2000, stan_backend=None,
     # growth='logistic'
 )
 
@@ -71,7 +75,14 @@ print(future.head())
 # use the model to make a forecast
 forecast = model.predict(future)
 
+# diagnostics
+df_cv = cross_validation(model, initial='730 days', period='180 days', horizon = '365 days')
+df_p = performance_metrics(df_cv)
 
+print("df_cv")
+print(df_cv.head())
+print("df_p")
+print(df_p.head())
 
 
 # summarize the forecast
