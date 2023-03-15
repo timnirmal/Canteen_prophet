@@ -161,9 +161,13 @@ for params in all_params:
     # Metrics to log
     with open("results/" + folder_name + "/results.txt", "a") as myfile:
         myfile.write("\n\nMetrics\n")
-        myfile.write("R2: " + r2_score(df["y"], forecast["yhat"][:len(df["y"])]))
-        myfile.write("MSE: " + mean_squared_error(df["y"], forecast["yhat"][:len(df["y"])]))
-        myfile.write("MAE: " + mean_absolute_error(df["y"], forecast["yhat"][:len(df["y"])]))
+        myfile.write("R2: ")
+        myfile.write(str(r2_score(df["y"], forecast["yhat"][:len(df["y"])])))
+        myfile.write("MSE: ")
+        myfile.write(str(mean_squared_error(df["y"], forecast["yhat"][:len(df["y"])])))
+        myfile.write("MAE: ")
+        myfile.write(str(mean_absolute_error(df["y"], forecast["yhat"][:len(df["y"])])))
+
 
     with open('serialized_model' + str(all_params.index(params)) + '.json', 'w') as fout:
         fout.write(model_to_json(m))  # Save model
