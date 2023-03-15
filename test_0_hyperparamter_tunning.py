@@ -7,10 +7,6 @@ from prophet.serialize import model_to_json, model_from_json
 from prophet.diagnostics import cross_validation, performance_metrics
 import itertools
 import numpy as np
-from dask.distributed import Client
-
-# client = Client(n_workers=4, threads_per_worker=1, memory_limit='2GB')
-client = Client()
 
 # load every column in pd head
 pd.set_option('display.max_columns', None)
@@ -89,9 +85,23 @@ rmses = []  # Store the RMSEs for each params here
 for params in all_params:
     m = Prophet(**params).fit(df)  # Fit model with given params
     # df_cv = cross_validation(model, initial='730 days', period='180 days', horizon='365 days')
-    df_cv = cross_validation(m, cutoffs=cutoffs, horizon='30 days', parallel="dask")
+    df_cv = cross_validation(m, cutoffs=cutoffs, horizon='30 days')
     df_p = performance_metrics(df_cv)
     rmses.append(df_p['rmse'].values[0])
+
+    future = m.make_future_dataframe(periods=200, freq='D')
+
+    # use the model to make a forecast
+    forecast = m.predict(future)
+
+    r2_score(df["y"], forecast["yhat"][:len(df["y"])])
+    mean_squared_error(df["y"], forecast["yhat"][:len(df["y"])])
+    mean_absolute_error(df["y"], forecast["yhat"][:len(df["y"])])
+
+    print("Metrics")
+    print("R2: ", r2_score(df["y"], forecast["yhat"][:len(df["y"])]))
+    print("MSE: ", mean_squared_error(df["y"], forecast["yhat"][:len(df["y"])]))
+    print("MAE: ", mean_absolute_error(df["y"], forecast["yhat"][:len(df["y"])]))
 
 # Find the best parameters
 tuning_results = pd.DataFrame(all_params)
@@ -163,8 +173,3 @@ print('Best params: ', best_params)
 #
 # with open('serialized_model.json', 'r') as fin:
 #     m = model_from_json(fin.read())  # Load model
-
-
-# Run to install Dask conda or pip
-# conda install dask distributed
-# python -m pip install "dask[distributed]" --upgrade
