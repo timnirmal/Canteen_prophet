@@ -62,33 +62,51 @@ holidays = playoffs
 
 cutoffs = pd.to_datetime(['2020-06-01', '2021-06-01', '2022-06-01'])
 
-param_grid = {
-    'changepoint_prior_scale': [0.001, 0.01, 0.05, 0.1, 0.5],
-    # 'changepoint_prior_scale': [1, 0.5, 0.1, 0.05, 0.01, 0.001],
-    'seasonality_prior_scale': [0.01, 0.1, 1.0, 10.0],
-    # 'seasonality_prior_scale': [100, 10, 1, 0.1, 0.01],
-    'holidays': [holidays, None],
-    # 'holidays': [None, holidays],
-    'seasonality_mode': ['multiplicative'],
-    'holidays_prior_scale': [0.01, 0.1, 1.0, 10.0],
-    # 'holidays_prior_scale': [100, 10, 1, 0.1, 0.01, 0],
-    'mcmc_samples': [0, 10, 100, 1000],
-    # 'mcmc_samples': [1000, 100, 10, 0],
-    'interval_width': [0.5, 0.8, 1],
-    # 'interval_width': [100, 10, 1, 0.5, 0],
-    'uncertainty_samples': [1000, 2000, 5000],
-    # 'uncertainty_samples': [5000, 2000, 1000],
-    'stan_backend': [None],
-    'changepoint_range': [0.8, 0.9, 1],
-    # 'changepoint_range': [1, 0.9, 0.8],
-    'yearly_seasonality': [True, False],
-    'weekly_seasonality': [True, False],
-    'daily_seasonality': [True, False],
-    # 'growth': ['linear', 'logistic'],
-    'growth': ['linear'],
-    'n_changepoints': [25, 50, 100, 200, 500],
-    # 'n_changepoints': [500, 200, 100, 50, 25],
+# param_grid = {
+#     'changepoint_prior_scale': [0.001, 0.01, 0.05, 0.1, 0.5],
+#     # 'changepoint_prior_scale': [1, 0.5, 0.1, 0.05, 0.01, 0.001],
+#     'seasonality_prior_scale': [0.01, 0.1, 1.0, 10.0],
+#     # 'seasonality_prior_scale': [100, 10, 1, 0.1, 0.01],
+#     'holidays': [holidays, None],
+#     # 'holidays': [None, holidays],
+#     'seasonality_mode': ['multiplicative'],
+#     'holidays_prior_scale': [0.01, 0.1, 1.0, 10.0],
+#     # 'holidays_prior_scale': [100, 10, 1, 0.1, 0.01, 0],
+#     'mcmc_samples': [0, 10, 100, 1000],
+#     # 'mcmc_samples': [1000, 100, 10, 0],
+#     'interval_width': [0.5, 0.8, 1],
+#     # 'interval_width': [100, 10, 1, 0.5, 0],
+#     'uncertainty_samples': [1000, 2000, 5000],
+#     # 'uncertainty_samples': [5000, 2000, 1000],
+#     'stan_backend': [None],
+#     'changepoint_range': [0.8, 0.9, 1],
+#     # 'changepoint_range': [1, 0.9, 0.8],
+#     'yearly_seasonality': [True, False],
+#     'weekly_seasonality': [True, False],
+#     'daily_seasonality': [True, False],
+#     # 'growth': ['linear', 'logistic'],
+#     'growth': ['linear'],
+#     'n_changepoints': [25, 50, 100, 200, 500],
+#     # 'n_changepoints': [500, 200, 100, 50, 25],
+#
+# }
 
+
+param_grid = {
+    'n_changepoints': [50, 200],
+    "changepoint_range": [0.8],
+    "yearly_seasonality": [True],
+    "weekly_seasonality": [True],
+    "daily_seasonality": [True],
+    'holidays': [holidays, None],
+    "seasonality_mode": ["multiplicative"],
+    'seasonality_prior_scale': [0.01, 10.0],
+    'holidays_prior_scale': [0.01, 10.0],
+    "changepoint_prior_scale": [0.001, 0.01, 0.05, 0.1, 0.5, 1, 10],
+    'mcmc_samples': [0],
+    'interval_width': [0.8],
+    'uncertainty_samples': [1000],
+    'stan_backend': [None],
 }
 
 # create results folder
@@ -126,12 +144,12 @@ for params in all_params:
     # write iteration number, datetime of run to folder_name/results.txt
     with open("results/" + folder_name + "/results.txt", "a") as myfile:
         myfile.write("\n\n============================================================\n")
-        myfile.write("Iteration : " + str(all_params.index(params)) + "\n")
+        myfile.write("Iteration : " + iteration + "\n")
         myfile.write("Datetime : " + str(pd.to_datetime('today').strftime("%Y%m%d-%H%M%S")) + "\n\n")
     # write params to iteration_path/results.txt
     with open(iteration_path + "/results.txt", "a") as myfile:
         myfile.write("\n\n============================================================\n")
-        myfile.write("Iteration : " + str(all_params.index(params)) + "\n")
+        myfile.write("Iteration : " + iteration + "\n")
         myfile.write("Datetime : " + str(pd.to_datetime('today').strftime("%Y%m%d-%H%M%S")) + "\n\n")
 
     # print params
@@ -148,7 +166,7 @@ for params in all_params:
             results_file.write("%s: %s\n" % (key, value))
         results_file.write("\n\n")
 
-    print("\nIterration : ", (all_params.index(params)))
+    print("\nIterration : ", iteration)
     print("Model Training...\n")
     m = Prophet(**params).fit(df)  # Fit model with given params
     # df_cv = cross_validation(model, initial='730 days', period='180 days', horizon='365 days')
