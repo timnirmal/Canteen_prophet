@@ -81,9 +81,9 @@ param_grid = {
     'stan_backend': [None],
     'changepoint_range': [0.8, 0.9, 1],
     # 'changepoint_range': [1, 0.9, 0.8],
-    'yearly_seasonality': ['auto', True, False],
-    'weekly_seasonality': ['auto', True, False],
-    'daily_seasonality': ['auto', True, False],
+    'yearly_seasonality': [True, False],
+    'weekly_seasonality': [True, False],
+    'daily_seasonality': [True, False],
     # 'growth': ['linear', 'logistic'],
     'growth': ['linear'],
     'n_changepoints': [25, 50, 100, 200, 500],
@@ -203,9 +203,10 @@ for params in all_params:
         myfile.write("\n\n")
 
 
-
-    with open('serialized_model' + str(all_params.index(params)) + '.json', 'w') as fout:
+    # save model to json file in results folder/iteration folder
+    with open(iteration_path + '/serialized_model-' + iteration + '.json', 'w') as fout:
         fout.write(model_to_json(m))  # Save model
+
 
     # plot forecast
     m.plot(forecast)
