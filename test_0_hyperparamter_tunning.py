@@ -123,7 +123,6 @@ for params in all_params:
     # create results + iteration folder path + .txt file
     results_file_itr = open(iteration_path + "/results.txt", "w+")
 
-
     # write iteration number, datetime of run to folder_name/results.txt
     with open("results/" + folder_name + "/results.txt", "a") as myfile:
         myfile.write("\n\n============================================================\n")
@@ -148,7 +147,6 @@ for params in all_params:
         for key, value in params.items():
             results_file.write("%s: %s\n" % (key, value))
         results_file.write("\n\n")
-
 
     print("\nIterration : ", (all_params.index(params)))
     print("Model Training...\n")
@@ -202,11 +200,9 @@ for params in all_params:
         myfile.write(str(mean_absolute_error(df["y"], forecast["yhat"][:len(df["y"])])))
         myfile.write("\n\n")
 
-
     # save model to json file in results folder/iteration folder
     with open(iteration_path + '/serialized_model-' + iteration + '.json', 'w') as fout:
         fout.write(model_to_json(m))  # Save model
-
 
     # plot forecast
     m.plot(forecast)
